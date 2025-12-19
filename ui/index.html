@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kensa</title>
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --card-bg: #313244;
+      --text: #cdd6f4;
+      --accent: #89b4fa;
+      --green: #a6e3a1;
+      --red: #f38ba8;
+      --subtext: #a6adc8;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      user-select: none;
+      cursor: default;
+      overflow: hidden;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      height: 40px;
+    }
+
+    h1 { margin: 0; color: var(--accent); }
+
+    button {
+      background-color: var(--green);
+      color: #111;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.95); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: calc(100vh - 100px);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: none; 
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .card::-webkit-scrollbar { 
+      display: none; 
+    }
+    
+    h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid var(--subtext); padding-bottom: 10px; }
+
+    ul { list-style: none; padding: 0; }
+    
+    .item {
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .news-title { display: block; font-weight: bold; color: var(--text); text-decoration: none; }
+    .news-title:hover { color: var(--accent); }
+    .news-date { font-size: 0.8rem; color: var(--subtext); margin-top: 4px; display: block;}
+
+    .update-row { display: flex; justify-content: space-between; }
+    .version { font-family: monospace; font-size: 0.9rem; color: var(--subtext); }
+    .arrow { color: var(--accent); margin: 0 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Kensa</h1>
+    <button id="scan-btn">Refresh System</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Arch News</h2>
+      <ul id="news-list">
+        <li style="color: var(--subtext)">Loading news...</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Pending Updates</h2>
+
+      <button id="update-btn" style="display: none; width: 100%; margin-bottom: 15px; background-color: var(--accent);">
+        Update
+      </button>
+
+      <div id="status" style="margin-bottom: 10px; color: var(--subtext);">Ready to scan.</div>
+      <ul id="update-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core;
+
+    const newsList = document.getElementById("news-list");
+    const updateList = document.getElementById("update-list");
+    const statusEl = document.getElementById("status");
+    const btn = document.getElementById("scan-btn");
+    const updateBtn = document.getElementById("update-btn");
+
+    function openBrowser(url) {
+        invoke("open_link", { url: url });
+    }
+
+    async function loadNews() {
+      try {
+        const news = await invoke("get_news");
+        newsList.innerHTML = "";
+        
+        news.forEach(item => {
+          const li = document.createElement("li");
+          li.className = "item";
+          li.innerHTML = `
+            <span class="news-title" style="cursor: pointer;" onclick="openBrowser('${item.link}')">
+                ${item.title} ↗
+            </span>
+            <span class="news-date">${item.pub_date}</span>
+          `;
+          newsList.appendChild(li);
+        });
+      } catch (e) {
+        newsList.innerHTML = `<li style="color: var(--red)">Failed to load news</li>`;
+      }
+    }
+
+    async function scanUpdates() {
+      btn.disabled = true;
+      btn.innerText = "Scanning...";
+      statusEl.innerText = "Checking repositories...";
+      updateList.innerHTML = "";
+      updateBtn.style.display = "none";
+
+      try {
+        const updates = await invoke("get_updates");
+        statusEl.innerText = `Found ${updates.length} updates.`;
+
+        if (updates.length > 0) {
+            updateBtn.style.display = "block";
+            updateBtn.innerText = "Update"; 
+        }
+        
+        updates.forEach(u => {
+          const li = document.createElement("li");
+          li.className = "item";
+          li.innerHTML = `
+            <div class="update-row">
+              <strong>${u.name}</strong>
+            </div>
+            <div class="version">
+              ${u.old_version} <span class="arrow">➜</span> ${u.new_version}
+            </div>
+          `;
+          updateList.appendChild(li);
+        });
+      } catch (e) {
+        statusEl.innerText = "Error scanning updates.";
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Refresh System";
+      }
+    }
+
+    updateBtn.addEventListener("click", async () => {
+        updateBtn.disabled = true;
+        updateBtn.innerText = "Updating in Terminal...";
+        
+        await invoke("install_updates");
+
+        updateBtn.disabled = false;
+        updateBtn.innerText = "Update";
+        
+        scanUpdates();
+    });
+
+    btn.addEventListener("click", scanUpdates);
+    loadNews(); 
+  </script>
+</body>
+</html>

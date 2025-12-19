@@ -1,0 +1,23 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Tauri build artifacts
+/src-tauri/target/
+src-tauri/linuxdeploy-x86_64.AppImage
+src-tauri/AppDir/
+
+# Node / frontend
+node_modules/
+dist/
+
+# IDE / editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+*.log
+*.tmp
+*.swp
