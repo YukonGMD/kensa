@@ -13,4 +13,5 @@ chmod +x Kensa-x86_64.AppImage
 ## Support
 
 This is my first project on GitHub, so if there are any errors please do tell!
+
 Discord: yukongmd
