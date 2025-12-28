@@ -1,6 +1,6 @@
 [package]
 name = "kensa"
-version = "0.1.0"
+version = "1.1.0"
 description = "A native Arch Linux update analyzer."
 authors = ["Naomi Roșca"]
 license = "GPL-3.0"

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Kensa</title>
 
   <style>
@@ -28,6 +28,8 @@
       --subtext: #9ca0b0;
       --border: #bcc0cc;
     }
+
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
       background-color: var(--bg);
@@ -94,6 +96,17 @@
     }
     .action-btn:hover { opacity: 0.9; }
     .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .action-btn.red {
+        background-color: var(--red);
+        color: #111;
+    }
+
+    .action-btn.installed {
+        background-color: var(--subtext);
+        cursor: default;
+        opacity: 0.7;
+    }
 
     .sidebar-overlay {
       position: fixed;
@@ -232,9 +245,53 @@
       font-family: 'Segoe UI', sans-serif;
       font-size: 0.9rem;
     }
-    
     option { background: #fff; color: #000; }
     body:not(.light-mode) select { background: #b0b5c4; color: #000; }
+
+    .search-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-shrink: 0; 
+      align-items: center;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    
+    #search-btn {
+      height: 40px;
+      padding: 0 24px;
+    }
+    
+    #search-results {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none; 
+      min-height: 0; 
+    }
+    #search-results::-webkit-scrollbar { display: none; } 
+
+    .search-result {
+      background: rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .result-info div:first-child { font-weight: bold; font-size: 1.1rem; }
+    .result-meta { color: var(--subtext); font-size: 0.9rem; margin-top: 4px; font-family: monospace; }
+    .result-desc { color: var(--text); font-size: 0.9rem; margin-top: 6px; opacity: 0.9; }
 
     .setting-item {
       background: var(--card-bg);
@@ -246,31 +303,15 @@
       align-items: center;
     }
     
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 46px;
-      height: 24px;
-    }
+    .switch { position: relative; display: inline-block; width: 46px; height: 24px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #333;
-      transition: .3s;
-      border-radius: 34px;
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #333; transition: .3s; border-radius: 34px;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .3s;
-      border-radius: 50%;
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white; transition: .3s; border-radius: 50%;
     }
     input:checked + .slider { background-color: var(--accent); }
     input:checked + .slider:before { transform: translateX(22px); }
@@ -294,8 +335,12 @@
       <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
       Dashboard
     </button>
-    <button class="nav-btn" onclick="nav('packages', 'Packages')">
+    <button class="nav-btn" onclick="nav('installed', 'Installed')">
       <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+      Installed
+    </button>
+    <button class="nav-btn" onclick="nav('packages', 'Packages')">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
       Packages
     </button>
     <button class="nav-btn" onclick="nav('settings', 'Settings')">
@@ -323,7 +368,7 @@
       </div>
     </div>
 
-    <div id="view-packages" class="view-section">
+    <div id="view-installed" class="view-section">
       <div class="card" style="height: 100%;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
           <div style="flex:1;"></div>
@@ -334,13 +379,28 @@
             <tr>
               <th>Package</th>
               <th>Current</th>
-              <th>Action</th>
+              <th>Version</th>
+              <th style="width: 50px;"></th>
             </tr>
           </thead>
           <tbody id="pkg-body"></tbody>
         </table>
         <div id="pkg-empty" style="text-align:center; padding:30px; color:var(--subtext);">
           Loading packages...
+        </div>
+      </div>
+    </div>
+
+    <div id="view-packages" class="view-section">
+      <div class="card" style="height: 100%;">
+        <div class="search-container">
+          <input type="text" id="search-input" class="search-input" placeholder="Search Arch Repositories...">
+          <button id="search-btn" class="action-btn">Search</button>
+        </div>
+        <div id="search-results">
+          <div style="text-align:center; padding:20px; color:var(--subtext);">
+            Enter a package name above.
+          </div>
         </div>
       </div>
     </div>
@@ -375,7 +435,7 @@
             <div style="font-size:0.85rem; color:var(--subtext);">Show desktop alerts (Experimental)</div>
           </div>
           <label class="switch">
-            <input type="checkbox" disabled>
+            <input type="checkbox" id="toggle-notifications">
             <span class="slider"></span>
           </label>
         </div>
@@ -385,6 +445,18 @@
   </main>
 
   <script>
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+        e.preventDefault();
+      }
+    });
+    
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
     const { invoke } = window.__TAURI__.core;
     
     let cachedData = [];
@@ -415,7 +487,7 @@
       sidebar.classList.remove('open');
       overlay.classList.remove('active');
 
-      if(viewName === 'packages') loadAllPackages();
+      if(viewName === 'installed') loadAllPackages();
     };
 
     const scanBtn = document.getElementById('global-scan-btn');
@@ -425,20 +497,35 @@
     const newsList = document.getElementById('news-list');
 
     async function fetchNews() {
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 10000)
+      );
+
       try {
-        const items = await invoke('get_news');
+        const items = await Promise.race([
+          invoke('get_news'),
+          timeout
+        ]);
+        
         newsList.innerHTML = '';
         items.forEach(i => {
           const li = document.createElement('li');
           li.className = 'list-item';
-          li.innerHTML = `
-            <span class="news-title" onclick="invoke('open_link', {url: '${i.link}'})">${i.title} ↗</span>
-            <div class="news-date">${i.pub_date}</div>
-          `;
+          
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'news-title';
+          titleSpan.textContent = i.title + " ↗";
+          titleSpan.onclick = () => invoke('open_link', {url: i.link});
+          
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'news-date';
+          dateDiv.textContent = i.pub_date;
+          
+          li.append(titleSpan, dateDiv);
           newsList.appendChild(li);
         });
       } catch {
-        newsList.innerHTML = '<li style="padding:10px; color:var(--red);">Failed to fetch news.</li>';
+        newsList.innerHTML = '<li style="padding:10px; color:var(--subtext);">News feed unavailable.</li>';
       }
     }
 
@@ -455,17 +542,33 @@
 
         if (data.length > 0) {
           dashUpdateBtn.style.display = 'block';
+          if (localStorage.getItem('kensa_notifications') === 'true') {
+             invoke('send_notification', { title: "Updates Found", body: `Kensa found ${data.length} available updates.` });
+          }
         }
 
         data.forEach(pkg => {
           const li = document.createElement('li');
           li.className = 'list-item';
-          li.innerHTML = `
-            <div class="update-row">
-              <strong>${pkg.name}</strong>
-              <div class="ver-tag">${pkg.old_version} <span class="arrow">➜</span> ${pkg.new_version}</div>
-            </div>
-          `;
+          
+          const row = document.createElement('div');
+          row.className = 'update-row';
+          
+          const nameStrong = document.createElement('strong');
+          nameStrong.textContent = pkg.name;
+          
+          const verDiv = document.createElement('div');
+          verDiv.className = 'ver-tag';
+          
+          const oldVerText = document.createTextNode(pkg.old_version + ' ');
+          const arrowSpan = document.createElement('span');
+          arrowSpan.className = 'arrow';
+          arrowSpan.textContent = '➜';
+          const newVerText = document.createTextNode(' ' + pkg.new_version);
+          
+          verDiv.append(oldVerText, arrowSpan, newVerText);
+          row.append(nameStrong, verDiv);
+          li.appendChild(row);
           updateList.appendChild(li);
         });
 
@@ -497,23 +600,55 @@
 
             data.forEach(p => {
                 const tr = document.createElement('tr');
-                let options = `<option value="current" selected>Current (${p.version})</option>`;
+                
+                const tdName = document.createElement('td');
+                const nameStrong = document.createElement('strong');
+                nameStrong.textContent = p.name;
+                tdName.appendChild(nameStrong);
+                
+                const tdVer = document.createElement('td');
+                tdVer.style.color = 'var(--subtext)';
+                tdVer.style.fontFamily = 'monospace';
+                tdVer.textContent = p.version;
+                
+                const tdAction = document.createElement('td');
+                const select = document.createElement('select');
+                select.className = 'pkg-action-select';
+                select.dataset.name = p.name;
+                select.onchange = () => handlePkgSelect(select);
+                
+                const optCurrent = document.createElement('option');
+                optCurrent.value = 'current';
+                optCurrent.selected = true;
+                optCurrent.textContent = `Current (${p.version})`;
+                select.appendChild(optCurrent);
+                
                 if(p.cached_versions) {
                     p.cached_versions.forEach(fname => {
-                       options += `<option value="${fname}">Downgrade (Cache): ${fname}</option>`;
+                       const opt = document.createElement('option');
+                       opt.value = fname;
+                       opt.textContent = `Downgrade (Cache): ${fname}`;
+                       select.appendChild(opt);
                     });
                 }
-                options += `<option value="fetch_remote">🔎 Search Arch Archive...</option>`;
+                
+                const optRemote = document.createElement('option');
+                optRemote.value = 'fetch_remote';
+                optRemote.textContent = '🔎 Search Arch Archive...';
+                select.appendChild(optRemote);
+                
+                tdAction.appendChild(select);
+                
+                const tdDelete = document.createElement('td');
+                const btnDel = document.createElement('button');
+                btnDel.className = 'action-btn red';
+                btnDel.style.padding = '0 12px';
+                btnDel.style.height = '30px';
+                btnDel.textContent = '×';
+                btnDel.onclick = () => uninstallPackage(p.name, btnDel);
+                tdDelete.appendChild(btnDel);
 
-                tr.innerHTML = `
-                  <td><strong>${p.name}</strong></td>
-                  <td style="color:var(--subtext); font-family:monospace;">${p.version}</td>
-                  <td>
-                    <select class="pkg-action-select" data-name="${p.name}" onchange="handlePkgSelect(this)">
-                      ${options}
-                    </select>
-                  </td>
-                `;
+                tr.append(tdName, tdVer, tdAction, tdDelete);
                 tbody.appendChild(tr);
             });
         } catch (e) {
@@ -542,7 +677,7 @@
                     const filename = url.split('/').pop();
                     const option = document.createElement('option');
                     option.value = url;
-                    option.text = `Downgrade (Web): ${filename}`;
+                    option.textContent = `Downgrade (Web): ${filename}`;
                     selectEl.add(option);
                 });
                 
@@ -581,9 +716,7 @@
             return;
         }
 
-        const command = "sudo pacman -U " + targets.join(" ");
-        
-        await invoke('install_updates', { targetCmd: command });
+        await invoke('manage_packages', { action: 'upgrade_file', packages: targets });
         
         btn.innerText = 'Apply Version Changes';
         btn.disabled = false;
@@ -594,11 +727,127 @@
       const btn = document.getElementById('dash-update-btn');
       btn.innerText = 'Terminal Open...';
       btn.disabled = true;
-      await invoke('install_updates', { targetCmd: null });
+      await invoke('manage_packages', { action: 'update_all', packages: [] });
       btn.innerText = 'Update Now';
       btn.disabled = false;
+      if (localStorage.getItem('kensa_notifications') === 'true') {
+         invoke('send_notification', { title: "System Update", body: "Update process finished." });
+      }
       scanSystem();
     }
+
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    const searchResults = document.getElementById('search-results');
+
+    async function performSearch() {
+        const query = searchInput.value.trim();
+        if(!query) return;
+
+        searchResults.innerHTML = '<div style="text-align:center; padding:20px; color:var(--subtext);">Searching repositories...</div>';
+        searchBtn.disabled = true;
+
+        try {
+            const results = await invoke('search_packages', { query });
+            searchResults.innerHTML = '';
+            
+            if(results.length === 0) {
+                searchResults.innerHTML = '<div style="text-align:center; padding:20px; color:var(--subtext);">No packages found.</div>';
+            } else {
+                results.forEach(pkg => {
+                    const div = document.createElement('div');
+                    div.className = 'search-result';
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'result-info';
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.textContent = pkg.name;
+                    
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'result-meta';
+                    metaDiv.textContent = `${pkg.repo} / ${pkg.version}`;
+                    
+                    const descDiv = document.createElement('div');
+                    descDiv.className = 'result-desc';
+                    descDiv.textContent = pkg.description;
+                    
+                    infoDiv.append(nameDiv, metaDiv, descDiv);
+                    
+                    const btn = document.createElement('button');
+                    if (pkg.installed) {
+                        btn.className = 'action-btn red';
+                        btn.textContent = 'Uninstall';
+                        btn.onclick = () => uninstallPackage(pkg.name, btn);
+                    } else {
+                        btn.className = 'action-btn';
+                        btn.textContent = 'Install';
+                        btn.onclick = () => installPackage(pkg.name, btn);
+                    }
+                    
+                    div.append(infoDiv, btn);
+                    searchResults.appendChild(div);
+                });
+            }
+        } catch(e) {
+            searchResults.innerHTML = `<div style="text-align:center; padding:20px; color:var(--red);">Search failed: ${e}</div>`;
+        } finally {
+            searchBtn.disabled = false;
+        }
+    }
+
+    window.installPackage = async (pkgName, btnEl) => {
+        const confirmInstall = confirm(`Install ${pkgName}? This will open a terminal.`);
+        if(confirmInstall) {
+            const origText = btnEl.innerText;
+            btnEl.innerText = "Installing...";
+            btnEl.disabled = true;
+            
+            await invoke('manage_packages', { action: 'install', packages: [pkgName] });
+            
+            const isInstalled = await invoke('check_is_installed', { name: pkgName });
+            if (isInstalled) {
+                btnEl.innerText = "Uninstall";
+                btnEl.className = "action-btn red";
+                btnEl.onclick = () => uninstallPackage(pkgName, btnEl);
+                btnEl.disabled = false;
+            } else {
+                btnEl.innerText = origText;
+                btnEl.disabled = false;
+            }
+        }
+    };
+
+    window.uninstallPackage = async (pkgName, btnEl) => {
+        const confirmUninstall = confirm(`Are you sure you want to uninstall ${pkgName}?`);
+        if(confirmUninstall) {
+            const origText = btnEl.innerText;
+            btnEl.innerText = "Removing...";
+            btnEl.disabled = true;
+            
+            await invoke('manage_packages', { action: 'remove', packages: [pkgName] });
+            
+            const isInstalled = await invoke('check_is_installed', { name: pkgName });
+            if (!isInstalled) {
+                if (btnEl.innerText !== "×") {
+                    btnEl.innerText = "Install";
+                    btnEl.className = "action-btn";
+                    btnEl.onclick = () => installPackage(pkgName, btnEl);
+                    btnEl.disabled = false;
+                } else {
+                    loadAllPackages();
+                }
+            } else {
+                btnEl.innerText = origText;
+                btnEl.disabled = false;
+            }
+        }
+    };
+
+    searchBtn.onclick = performSearch;
+    searchInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') performSearch();
+    });
 
     dashUpdateBtn.onclick = triggerUpdate;
     scanBtn.onclick = scanSystem;
@@ -606,6 +855,7 @@
 
     const themeToggle = document.getElementById('toggle-theme');
     const autoScanToggle = document.getElementById('toggle-autoscan');
+    const notifToggle = document.getElementById('toggle-notifications');
 
     themeToggle.onchange = (e) => {
       if(!e.target.checked) document.body.classList.add('light-mode');
@@ -617,6 +867,10 @@
       localStorage.setItem('kensa_autoscan', e.target.checked);
     };
 
+    notifToggle.onchange = (e) => {
+      localStorage.setItem('kensa_notifications', e.target.checked);
+    };
+
     if (localStorage.getItem('kensa_theme') === 'light') {
       document.body.classList.add('light-mode');
       themeToggle.checked = false;
@@ -625,6 +879,10 @@
     if (localStorage.getItem('kensa_autoscan') === 'true') {
       autoScanToggle.checked = true;
       scanSystem();
+    }
+
+    if (localStorage.getItem('kensa_notifications') === 'true') {
+      notifToggle.checked = true;
     }
 
     fetchNews();
