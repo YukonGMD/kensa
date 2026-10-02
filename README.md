@@ -8,7 +8,7 @@ You can download the latest AppImage from the [Releases](https://github.com/Yuko
 
 After downloading, mark it executable:
 
-chmod +x Kensa-x86_64.AppImage
+chmod +x Kensa_1.1.0_x86_64.appimage
 
 ## Support
 
